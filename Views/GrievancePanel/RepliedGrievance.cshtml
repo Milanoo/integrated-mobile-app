@@ -1,0 +1,113 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+@using IntegratedMobileApp.Extensions;
+@using IntegratedMobileApp.Models.Database;
+@{
+	ViewData["Title"] = "Grievance Panel";
+	var grievs = ViewData["Grievs"] as List<TabUsergriv>;
+}
+
+
+<div class="p-2">
+	<table class="table table-bordered table-striped">
+		<thead class="table-success">
+			<tr class="text-center">
+				<th>SN</th>
+				<th>Grievance</th>				
+				<th>Grievance To</th>				
+				<th>Reply</th>				
+				@if (User.IsGHO())
+				{
+					<th>Action</th>
+				}
+
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var griev in grievs!)
+			{
+				var sn = grievs.IndexOf(griev) + 1;
+				<tr>
+					<td>@sn</td>
+					<td>
+						<div class="d-flex justify-content-between">
+							<div>
+								<span>
+									@griev.Grivtext
+								</span>
+								<figcaption class="blockquote-footer" style="margin-top:1rem;margin-bottom:0rem">
+									@griev.GetGrievancePostedBy() (@griev.GetGrievanceSenderName()) : @griev.GetGrievancePostTime()
+								</figcaption>
+							</div>
+							<div>
+								@if (griev.Gpic != null && griev.Gpic != "" && griev.Gpic != "-")
+								{
+									<img class="pointer" id="imgGriev_@sn" width="75" height="75" src="/UploadDocs\\@griev.Gpic" onclick="OnImageClick('imgGriev_@sn')" />
+								}
+							</div>
+						</div>
+					</td>
+					<td>
+						@if (griev.Grivreceiver != null)
+						{
+							<span>
+								@griev.GetGrievanceReceiverDepartmentName()
+							</span>
+						}
+					</td>
+					<td>
+						@if (griev.Replyid != null && griev.Replyid != "")
+						{
+							<div class="d-flex justify-content-between">
+								<div>
+									<span>
+										@griev.Replytext
+									</span>
+									<figcaption class="blockquote-footer" style="margin-top:1rem;margin-bottom:0rem">
+										@griev.GetReplyPostedBy() : @griev.GetReplyPostTime()
+									</figcaption>
+								</div>
+								<div>
+									@if (griev.Rpic != null && griev.Rpic != "" && griev.Rpic != "-")
+									{
+										<img class="pointer" id="imgReply_@sn" width="75" height="75" src="/UploadDocs\\@griev.Rpic" onclick="OnImageClick('imgReply_@sn')" />
+									}
+								</div>
+							</div>
+						}
+					</td>
+					@if (User.IsGHO())
+					{
+						<td>
+							@if (griev.Status != null && griev.Status == true)
+							{
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="chkStatus" checked onchange="OnStatusCheckChanged('@griev.Id')">
+								</div>
+								<label class="form-check-label" for="chkStatus">Addressed</label>
+
+							}
+							else
+							{
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="chkStatus" onchange="OnStatusCheckChanged('@griev.Id')">
+								</div>
+								<label class="form-check-label" for="chkStatus">UnAddressed</label>
+							}
+						</td>
+					}
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

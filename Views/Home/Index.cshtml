@@ -1,0 +1,276 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+@{
+	ViewData["Title"] = "Home Page";
+
+	var wardUserCounts = ViewData["WardUserCounts"] as Dictionary<string, int>;
+	var wardGrievanceCounts = ViewData["WardGrievanceCounts"] as Dictionary<string, Tuple<int, int>>;
+	var deptGrievanceCounts = ViewData["DepartmentGrievanceCounts"] as Dictionary<string, Tuple<int, int>>;
+	var wardInformationCounts = ViewData["WardInformationCounts"] as Dictionary<string, int>;
+	var departmentInformationCounts = ViewData["DepartmentInformationCounts"] as Dictionary<string, int>;
+
+}
+
+<div class="text-center mb-5">
+	<h1 class="display-4">Welcome to Integrated Mobile App Dashboard</h1>
+</div>
+
+
+<div class="row gap-1">
+	<div class="col rounded border border-1">
+		<canvas id="User_Chart"></canvas>
+	</div>
+	<div class="col">
+		<div class="row rounded border border-1 h-50 mb-1">
+			<canvas class="h-100" id="WardGrievance_Chart"></canvas>
+		</div>
+		<div class="row rounded border border-1 h-50">
+			<canvas  class="h-100" id="DepartmentGrievance_Chart"></canvas>
+		</div>
+	</div>
+	<div class="col">
+		<div class="row rounded border border-1 h-50 mb-1">
+			<canvas class="h-100" id="WardInfo_Chart"></canvas>
+		</div>
+		<div class="row rounded border border-1 h-50">
+			<canvas class="h-100" id="DepartmentInfo_Chart"></canvas>
+		</div>
+	</div>
+</div>
+
+<script>
+	window.onload = function () {
+		LoadDashBoardCharts();
+	};
+
+	function LoadDashBoardCharts() {
+		LoadUserChart();
+		LoadGrievanceChart();
+		LoadInformationChar();
+	}
+		
+	function LoadUserChart() {
+		var wards = @Json.Serialize(wardUserCounts!.Keys);
+		var userCounts = @Json.Serialize(wardUserCounts!.Values);
+		var xValues = wards;
+		var yValues = userCounts;		
+		new Chart("User_Chart", {
+			type: "bar",
+			data: {
+				labels: xValues,
+				datasets: [{
+					label: "User Count",
+					data: yValues,
+					borderWidth: 2
+				}]
+			},
+			options: {
+				maintainAspectRatio: false,
+				responsive: true,
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true,
+							min: 0
+						}
+					}]
+				},
+				legend: {
+					display: false,
+				},
+				title: {
+					display: true,
+					text: "IMA Wardwise User Count Status"
+				}
+			}
+		});
+	}
+
+	function LoadGrievanceChart() {
+		LoadWardGrievanceChart();
+		LoadDepartmentGrievanceChart();
+	}
+
+	function LoadWardGrievanceChart() {
+		var wards = @Json.Serialize(wardGrievanceCounts!.Keys);
+		var grievanceCounts = @Json.Serialize(wardGrievanceCounts!.Values.Select(it=>it.Item1));
+		var replyCounts = @Json.Serialize(wardGrievanceCounts!.Values.Select(it=>it.Item2));
+		var xValues = wards;
+		var y1Values = grievanceCounts;
+		var y2Values = replyCounts;
+		new Chart("WardGrievance_Chart", {
+			type: "bar",
+			data: {
+				labels: xValues,
+				datasets: [{
+					label: "Grievance Count",
+					backgroundColor: "rgba(255, 0, 0, 0.5)",
+					data: y1Values,
+					borderWidth: 2
+				},
+				{
+					label: "Reply Count",
+					backgroundColor: "rgba(0, 255, 0, 0.5)",
+					data: y2Values,
+					borderWidth: 2
+				}
+				]
+			},
+			options: {
+				responsive: true,
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true,
+							min: 0
+						}
+					}]
+				},
+				legend: {
+					display: true,
+					position: 'bottom',
+				},
+				title: {
+					display: true,
+					text: "Ward Grievance Count Status"
+				}
+
+			}
+		});
+	}
+
+	function LoadDepartmentGrievanceChart() {
+		var wards = @Json.Serialize(deptGrievanceCounts!.Keys);
+		var grievanceCounts = @Json.Serialize(deptGrievanceCounts!.Values.Select(it=>it.Item1));
+		var replyCounts = @Json.Serialize(deptGrievanceCounts!.Values.Select(it=>it.Item2));
+		var xValues = wards;
+		var y1Values = grievanceCounts;
+		var y2Values = replyCounts;
+		new Chart("DepartmentGrievance_Chart", {
+			type: "bar",
+			data: {
+				labels: xValues,
+				datasets: [{
+					label: "Grievance Count",
+					backgroundColor: "rgba(255, 0, 0, 0.5)",
+					data: y1Values,
+					borderWidth: 2
+				},
+				{
+					label: "Reply Count",
+					backgroundColor: "rgba(0, 255, 0, 0.5)",
+					data: y2Values,
+					borderWidth: 2
+				}
+				]
+			},
+			options: {
+				responsive: true,
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true,
+							min: 0
+						}
+					}]
+				},
+				legend: {
+					display: true,
+					position: 'bottom',
+				},
+				title: {
+					display: true,
+					text: "Department Grievance Count Status"
+				}
+
+			}
+		});
+	}
+
+	function LoadInformationChar() {
+		LoadWardInformationChart();
+		LoadDepartmentInformationChart();
+	}
+
+	function LoadWardInformationChart() {
+		var wards = @Json.Serialize(wardInformationCounts!.Keys);
+		var userCounts = @Json.Serialize(wardInformationCounts!.Values);
+		var xValues = wards;
+		var yValues = userCounts;
+		new Chart("WardInfo_Chart", {
+			type: "bar",
+			data: {
+				labels: xValues,
+				datasets: [{
+					backgroundColor: "rgba(0, 255, 255, 0.5)",
+					data: yValues,
+					borderWidth: 2
+				}]
+			},
+			options: {
+				responsive: true,
+				scales: {					
+					yAxes: [{
+						ticks: {
+							beginAtZero: true,
+							min: 0
+						}
+					}]
+				},
+				legend: {
+					display: false,
+				},
+				title: {
+					display: true,
+					text: "Ward Information Post Count Status"
+				},
+			}
+		});
+	}
+
+	function LoadDepartmentInformationChart() {
+		var wards = @Json.Serialize(departmentInformationCounts!.Keys);
+		var userCounts = @Json.Serialize(departmentInformationCounts!.Values);
+		var xValues = wards;
+		var yValues = userCounts;
+		new Chart("DepartmentInfo_Chart", {
+			type: "bar",
+			data: {
+				labels: xValues,
+				datasets: [{
+					backgroundColor: "rgba(0, 0, 255, 0.5)",
+					data: yValues,
+					borderWidth: 2
+				}]
+			},
+			options: {
+				responsive: true,
+				scales: {					
+					yAxes: [{
+						ticks: {
+							beginAtZero: true,
+							min: 0
+						}
+					}]
+				},
+				legend: {
+					display: false,
+				},
+				title: {
+					display: true,
+					text: "Department Information Post Count Status"
+				},
+			}
+		});
+	}
+</script>

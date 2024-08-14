@@ -1,0 +1,6 @@
+﻿Server: 192.168.0.6
+User Account: imappsuser
+Password: ImApp$U$er132
+Database: imobapp
+
+Scaffold-DbContext "Host=192.168.0.6;Port=5432;Database=imobapp;Username=imappsuser;Password=ImAppSUSer@132" Npgsql.EntityFrameworkCore.PostgreSQL -o Models/Database -f -Schema system

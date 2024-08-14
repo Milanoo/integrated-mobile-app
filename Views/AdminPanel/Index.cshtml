@@ -1,0 +1,635 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+
+@using IntegratedMobileApp.Extensions;
+@using IntegratedMobileApp.Models.Database;
+@{
+	ViewData["Title"] = "Admin Panel";
+	var userMunName = User.GetMunicipalityName();
+	var users = ViewData["Users"] as List<TabUser>;
+	var muncodeWardCount = ViewData["MunCodeWardCount"] as Dictionary<string, int>;
+}
+
+<div>
+	@*@if (TempData["AlertMessage"] != null && TempData["AlertMessage"]!.ToString()!= "")
+	{
+	<div class="alert alert-info">
+	@TempData["AlertMessage"]
+	</div>
+	}*@
+	<div style="float:right">
+		@if (TempData["ErrorMessage"] != null && TempData["ErrorMessage"]!.ToString() != "")
+		{
+			<div class="alert alert-danger alert-dismissible fade show" role="alert" style="width: 25%; right:10px; position: fixed;">
+				<div class="d-flex justify-content-between">
+					<div><strong>Error!!!</strong></div>
+					<div>
+						<button type="button" class="btn btn-sm btn-outline-dark close" data-dismiss="alert" aria-label="Close" onclick="CloseAlert()">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+				</div>
+				@TempData["ErrorMessage"]
+			</div>
+		}
+		else if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"]!.ToString() != "")
+		{
+			<div class="alert alert-success alert-dismissible fade show" role="alert" style="width: 25%; right:10px; position: fixed;">
+				<div class="d-flex justify-content-between">
+					<div><strong>Congratulations!!</strong></div>
+					<div>
+						<button type="button" class="btn btn-sm btn-outline-dark close" data-dismiss="alert" aria-label="Close" onclick="CloseAlert()">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+				</div>
+				@TempData["SuccessMessage"]
+			</div>
+		}
+		else if (TempData["InfoMessage"] != null && TempData["InfoMessage"]!.ToString() != "")
+		{
+			<div class="alert alert-info alert-dismissible fade show" role="alert" style="width: 25%; right:10px; position: fixed;">
+				<div class="d-flex justify-content-between">
+					<div><strong>Information!!</strong></div>
+					<div>
+						<button type="button" class="btn btn-sm btn-outline-dark close" data-dismiss="alert" aria-label="Close" onclick="CloseAlert()">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+				</div>
+				@TempData["InfoMessage"]
+			</div>
+		}
+		else if (TempData["WarningMessage"] != null && TempData["WarningMessage"]!.ToString() != "")
+		{
+			<div class="alert alert-warning alert-dismissible fade show" role="alert" style="width: 25%; right:10px; position: fixed;">
+				<div class="d-flex justify-content-between">
+					<div><strong>Warning!!</strong></div>
+					<div>
+						<button type="button" class="btn btn-sm btn-outline-dark close" data-dismiss="alert" aria-label="Close" onclick="CloseAlert()">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+				</div>
+				@TempData["WarningMessage"]
+			</div>
+		}
+	</div>
+	@if (!User.IsGHO())
+	{
+		<div class="row gap-1">
+			<div class="col rounded rounded-3 border border-1 p-2">
+				<div class="row mb-3">
+					<div class="col-sm-4">
+						<input readonly class="form-control" value="Edit an Existing User" />
+					</div>
+					<div class="col-sm-6">
+						<select id="UserCmb" class="form-select" onchange="OnUserChanged()">
+							<option disabled selected>Select User</option>
+							@foreach (var user in users!)
+							{
+							// (@($"{(user.Uname != null ? user.Uname : "")}"))
+								<option value="@user.Id">@user.Umail - @user.Upmw</option>
+							}
+						</select>
+					</div>
+					<div class="col-sm-2">
+						<button class="btn btn-outline-success float-end" onclick="OnSearchUserClick()">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+							</svg>
+							Search
+						</button>
+					</div>
+				</div>
+				<div id="EditUserView"></div>
+			</div>
+			<div class="col rounded rounded-3 border border-1 p-2">
+				<input readonly class="form-control mb-3" value="Create a New User" />
+				<form asp-controller="AdminPanel" asp-action="CreateUser">
+					<div class="row mb-3">
+						<label for="inputCUName" class="col-sm-2 col-form-label">Name</label>
+						<div class="col-sm-10">
+							<input class="form-control" name="Uname" id="inputCUName" value="">
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label for="inputCUMail" class="col-sm-2 col-form-label">Mail / Username</label>
+						<div class="col-sm-10">
+							<input class="form-control" name="Umail" id="inputCUMail" value="">
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label for="inputCUPhone" class="col-sm-2 col-form-label">Phone</label>
+						<div class="col-sm-10">
+							<input class="form-control" type="text" maxlength="15" name="Uphone" id="inputCUPhone" value="">
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label for="inputCUPassword" class="col-sm-2 col-form-label">Password</label>
+						<div class="col-sm-10">
+							<input type="password" class="form-control" name="Password" id="inputCUPassword" value="">
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label for="CUCategoryCmb" class="col-sm-2 col-form-label">Category</label>
+						<div class="col-sm-10">
+							<select id="CUCategoryCmb" class="form-select" onchange="OnCUCategoryChanged()">
+								<option disabled selected>Select Category</option>
+								@if (User.IsPublic())
+								{
+
+								}
+								else if (User.IsWard())
+								{
+									<option value="1">Public</option>
+									<option value="2">Ward</option>
+								}
+								else if (User.IsMunicipality())
+								{
+									<option value="1">Public</option>
+									<option value="2">Ward</option>
+									<option value="3">Municipality</option>
+								}
+								else
+								{
+									<option value="1">Public</option>
+									<option value="2">Ward</option>
+									<option value="3">Municipality</option>
+									<option value="4">Admin</option>
+								}
+							</select>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label for="CUWardCmb" class="col-sm-2 col-form-label">Ward</label>
+						<div class="col-sm-10">
+							<select id="CUWardCmb" class="form-select" onchange="OnCUWardChanged()">
+								<option disabled selected value="00">Select Ward</option>
+								@for (int i = 1; i <= muncodeWardCount![User.GetProvinceMunicipality()]; i++)
+								{
+									var val = $"{i:00}";
+									<option value="@val">Ward-@i</option>
+								}
+							</select>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label for="CUDepartmentCmb" class="col-sm-2 col-form-label">Department</label>
+						<div class="col-sm-10">
+							<select id="CUDepartmentCmb" class="form-select" onchange="OnCUDepartmentChanged()">
+								<option disabled selected value="00">Select Department</option>
+							</select>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<label class="col-sm-2 col-form-label">Access</label>
+						<div class="col-sm-10">
+							<div class="d-flex gap-2">
+								<span>Activate or Deactivate the user</span>
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="CUActiveDeactiveSwitch">
+								</div>
+							</div>
+							<div class="d-flex gap-2">
+								<span>Reply to greviance : Ward Level</span>
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="CUWardLevelReplySwitch">
+								</div>
+							</div>
+							<div class="d-flex gap-2">
+								<span>Reply to greviance : Municipality Level</span>
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="CUMunLevelReplySwitch">
+								</div>
+							</div>
+							<div class="d-flex gap-2">
+								<span>Post Information : Ward Level</span>
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="CUWardLevelPostSwitch">
+								</div>
+							</div>
+							<div class="d-flex gap-2">
+								<span>Post Information : Municipality Level</span>
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" role="switch" id="CUMunLevelPostSwitch">
+								</div>
+							</div>
+						</div>
+					</div>
+					<input hidden name="Upmw" id="cuPMWD" value="@User.GetLocality()" />
+					<input hidden name="Utype" id="cuType" value="" />
+					<div class="d-flex justify-content-end">
+						<button type="submit" class="btn btn-outline-primary">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-add" viewBox="0 0 16 16">
+								<path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0Zm-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+								<path d="M8.256 14a4.474 4.474 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10c.26 0 .507.009.74.025.226-.341.496-.65.804-.918C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4s1 1 1 1h5.256Z" />
+							</svg>
+							Create
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="justify-content-center">
+			<h4 style="color:red">Only Admin / Municipality Member / Ward Member can access the admin panel.</h4>
+		</div>
+	}
+
+</div>
+
+<div class="modal fade" id="SearchUserModal" tabindex="-1" aria-labelledby="SearchUserModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="SearchUserModalLabel">Search User</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="d-flex justify-content-around mb-3">
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="radioPublic" id="radioPublic" onchange="OnRadioPublicChange()">
+						<label class="form-check-label" for="radioWard">
+							Public
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="radioWard" id="radioWard" onchange="OnRadioWardChange()">
+						<label class="form-check-label" for="radioWard">
+							Ward
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="radioMuncipality" id="radioMuncipality" onchange="OnRadioMunChange()">
+						<label class="form-check-label" for="radioMuncipality">
+							Municipality
+						</label>
+					</div>
+				</div>
+				<div class="mb-3">
+					<select class="form-select w-100" id="cmbSearchUser" name="cmbSearchUser">
+					</select>
+				</div>
+				<div class="mb-3">
+					<div class="input-group">
+						<span class="input-group-text">Search User</span>
+						<input type="text" class="form-control" id="emailInput" placeholder="Enter Email" aria-label="Enter Email" autocomplete="off" onkeyup="SearchUser(event)">
+					</div>
+				</div>
+				<div class="mb-3">
+					<input class="form-control w-100" hidden id="selectedUserId" value="" />
+					<input class="form-control w-100 mb-3" id="selectedUser" value="" />
+					<div id="searchUserResults" class="row row-cols-1 row-cols-md-3 g-sm-3">
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+						<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+						<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+					</svg>
+					Close
+				</button>
+				<button type="button" class="btn btn-success" onclick="OnUsersExportClick()">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+						<path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+						<path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+					</svg>
+					Export
+				</button>
+				<button type="button" class="btn btn-primary" onclick="OnUserSelectClick()">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16">
+						<path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z" />
+						<path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z" />
+					</svg>
+					Select
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var userType = "";
+	var filteredUsers = null;
+	const emailInput = document.getElementById("emailInput");
+	const searchUserResultsContainer = document.getElementById("searchUserResults");
+
+	function OnSearchUserClick() {
+		var radioPublic = document.getElementById("radioPublic");
+		radioPublic.checked = true;
+		OnRadioPublicChange();
+		$('#SearchUserModal').modal('show');
+	}
+
+	function OnRadioPublicChange() {
+		var radioPublic = document.getElementById("radioPublic");
+		var radioWard = document.getElementById("radioWard");
+		var radioMun = document.getElementById("radioMuncipality");
+		var cmbSearchUser = document.getElementById("cmbSearchUser");
+		var innerHtmlTxt = `<option value="" disabled selected>Select User</option>`;
+		$('#selectedUserId').val('');
+		$('#selectedUser').val('');
+		$('#emailInput').val('');
+		searchUserResultsContainer.innerHTML = "";
+		if (radioPublic.checked) {
+			radioWard.checked = false;
+			radioMun.checked = false;
+			userType = "Public";
+			filteredUsers = @Json.Serialize(users.Where(it=>it.IsPublic()).ToList());
+			filteredUsers.forEach(it => {
+				innerHtmlTxt += '<option value="' + it.id + '">' + it.umail + '-' + it.upmw + '</option>';
+			});
+			cmbSearchUser.innerHTML = innerHtmlTxt;
+		}
+	}
+
+	function OnRadioWardChange() {
+		var radioPublic = document.getElementById("radioPublic");
+		var radioWard = document.getElementById("radioWard");
+		var radioMun = document.getElementById("radioMuncipality");
+		var cmbSearchUser = document.getElementById("cmbSearchUser");
+		var innerHtmlTxt = `<option value="" disabled selected>Select User</option>`;
+		$('#selectedUserId').val('');
+		$('#selectedUser').val('');
+		$('#emailInput').val('');
+		searchUserResultsContainer.innerHTML = "";
+		if (radioWard.checked) {
+			radioPublic.checked = false;
+			radioMun.checked = false;
+			userType = "Ward";
+			filteredUsers = @Json.Serialize(users.Where(it=>it.IsWard()).ToList());
+			filteredUsers.forEach(it => {
+				innerHtmlTxt += '<option value="' + it.id + '">' + it.umail + '-' + it.upmw + '</option>';
+			});
+			cmbSearchUser.innerHTML = innerHtmlTxt;
+		}
+	}
+
+	function OnRadioMunChange() {
+		var radioPublic = document.getElementById("radioPublic");
+		var radioWard = document.getElementById("radioWard");
+		var radioMun = document.getElementById("radioMuncipality");
+		var cmbSearchUser = document.getElementById("cmbSearchUser");
+		var innerHtmlTxt = `<option value="" disabled selected>Select User</option>`;
+		$('#selectedUserId').val('');
+		$('#selectedUser').val('');
+		$('#emailInput').val('');
+		searchUserResultsContainer.innerHTML = "";
+		if (radioMun.checked) {
+			radioPublic.checked = false;
+			radioWard.checked = false;
+			userType = "Municipality";
+			filteredUsers = @Json.Serialize(users.Where(it=>it.IsMunicipality()).ToList());
+			filteredUsers.forEach(it => {
+				innerHtmlTxt += '<option value="' + it.id + '">' + it.umail + '-' + it.upmw + '</option>';
+			});
+			cmbSearchUser.innerHTML = innerHtmlTxt;
+		}
+	}
+
+	function SearchUser(event) {
+		searchUserResultsContainer.innerHTML = "";
+		const searchTerm = emailInput.value.toLowerCase();
+		if (searchTerm == "") return;
+		const filteredResults = filteredUsers.filter(result =>
+			result.umail.toLowerCase().startsWith(searchTerm)
+		);
+		filteredResults.forEach(result => {
+			const div = document.createElement("div");
+			const resultUserBtn = document.createElement("button");
+			resultUserBtn.classList.add("btn");
+			resultUserBtn.classList.add("btn-outline-primary");
+			resultUserBtn.textContent = result.umail;
+			resultUserBtn.addEventListener("click", function () {
+				SelectUser(result);
+			});
+			div.appendChild(resultUserBtn);
+			searchUserResultsContainer.appendChild(div);
+		})
+		//filteredResults.forEach(result => {
+		//	const listItem = document.createElement("li");
+		//	const resultEmail = document.createElement("button");
+		//	resultEmail.classList.add("btn");
+		//	resultEmail.classList.add("btn-outline-primary");
+		//	resultEmail.classList.add("mb-1");
+		//	resultEmail.textContent = result.umail;
+		//	resultEmail.addEventListener("click", function () {
+		//		SelectUser(result);
+		//	});
+		//	listItem.appendChild(resultEmail);
+		//	searchEmailResultsContainer.appendChild(listItem);
+		//});
+	}
+
+	function SelectUser(resultUser) {
+		$('#selectedUserId').val(resultUser.id);
+		$('#selectedUser').val(resultUser.umail + '-' + resultUser.upmw);
+	}
+
+	function OnUserSelectClick() {
+		var userID = $('#selectedUserId').val();
+		if (userID == null || userID == "") {
+			alert("Invalid user selected.");
+			return;
+		}
+		$('#UserCmb').val(userID).change();
+		$('#SearchUserModal').modal('hide');
+	}
+
+	function OnUsersExportClick() {
+		var userData = [
+			["User Name", "Name", "Ward", "Created On"]
+		];
+		filteredUsers.forEach(it => {
+			userData.push([it.umail, it.uname, it.upmw.substring(3, 5), it.createdOn]);
+		});
+
+		// Convert data to CSV format
+		var csvContent = "";
+		userData.forEach(function (rowArray) {
+			var row = rowArray.join(",");
+			csvContent += row + "\n";
+		});
+
+		// Create a Blob object from CSV content
+		var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+		// Create a URL for the Blob
+		var url = URL.createObjectURL(blob);
+
+		// Create a temporary link and simulate a click to trigger download
+		var fileName = @Json.Serialize(userMunName) + "_" + userType + "_UserData.csv";
+		var a = document.createElement("a");
+		a.href = url;
+		a.download = fileName; // Specify the filename
+		a.click();
+
+		// Release the URL object
+		URL.revokeObjectURL(url);
+	}
+
+	function OnUserChanged() {
+		var userId = $('#UserCmb').val();
+		$.ajax({
+			type: "POST",
+			url: '/AdminPanel/GetUserToEdit',
+			data: { 'userId': userId },
+			success: function (data) {
+				$('#EditUserView').html(data);
+			},
+			failure: function () {
+				alert("Something went wrong! Please refresh the page and try again");
+			}
+		});
+	}
+
+	function OnCUCategoryChanged() {
+		var categeoryId = $('#CUCategoryCmb').val();
+		if (categeoryId == 1) {
+			$('#CUActiveDeactiveSwitch').attr('checked', true);
+			$('#CUWardLevelReplySwitch').attr('checked', false);
+			$('#CUMunLevelReplySwitch').attr('checked', false);
+			$('#CUWardLevelPostSwitch').attr('checked', false);
+			$('#CUMunLevelPostSwitch').attr('checked', false);
+
+			$("#CUActiveDeactiveSwitch").show();
+			$("#CUWardLevelReplySwitch").hide();
+			$("#CUMunLevelReplySwitch").hide();
+			$("#CUWardLevelPostSwitch").hide();
+			$("#CUMunLevelPostSwitch").hide();
+		}
+		else if (categeoryId == 2) {
+			$('#CUActiveDeactiveSwitch').attr('checked', true);
+			$('#CUWardLevelReplySwitch').attr('checked', true);
+			$('#CUMunLevelReplySwitch').attr('checked', false);
+			$('#CUWardLevelPostSwitch').attr('checked', true);
+			$('#CUMunLevelPostSwitch').attr('checked', false);
+
+			$("#CUActiveDeactiveSwitch").show();
+			$("#CUWardLevelReplySwitch").show();
+			$("#CUMunLevelReplySwitch").hide();
+			$("#CUWardLevelPostSwitch").show();
+			$("#CUMunLevelPostSwitch").hide();
+		}
+		else if (categeoryId == 3) {
+			$('#CUActiveDeactiveSwitch').attr('checked', true);
+			$('#CUWardLevelReplySwitch').attr('checked', false);
+			$('#CUMunLevelReplySwitch').attr('checked', true);
+			$('#CUWardLevelPostSwitch').attr('checked', false);
+			$('#CUMunLevelPostSwitch').attr('checked', true);
+
+			$("#CUActiveDeactiveSwitch").show();
+			$("#CUWardLevelReplySwitch").hide();
+			$("#CUMunLevelReplySwitch").show();
+			$("#CUWardLevelPostSwitch").hide();
+			$("#CUMunLevelPostSwitch").show();
+		}
+		else if (categeoryId == 4) {
+			$('#CUActiveDeactiveSwitch').attr('checked', true);
+			$('#CUWardLevelReplySwitch').attr('checked', true);
+			$('#CUMunLevelReplySwitch').attr('checked', true);
+			$('#CUWardLevelPostSwitch').attr('checked', true);
+			$('#CUMunLevelPostSwitch').attr('checked', true);
+
+			$("#CUActiveDeactiveSwitch").show();
+			$("#CUWardLevelReplySwitch").show();
+			$("#CUMunLevelReplySwitch").show();
+			$("#CUWardLevelPostSwitch").show();
+			$("#CUMunLevelPostSwitch").show();
+		}
+
+		HandleWardSelection("CUCategoryCmb", "CUWardCmb");
+
+		PopulateDepartment("CUCategoryCmb", "CUDepartmentCmb");
+
+		var a = $('#CUActiveDeactiveSwitch').is(":checked") ? '1' : '0';
+		var b = $('#CUWardLevelReplySwitch').is(":checked") ? '1' : '0';
+		var c = $('#CUMunLevelReplySwitch').is(":checked") ? '1' : '0';
+		var d = $('#CUWardLevelPostSwitch').is(":checked") ? '1' : '0';
+		var e = $('#CUMunLevelPostSwitch').is(":checked") ? '1' : '0';
+		var utype = categeoryId + a + b + c + d + e;
+		$('#cuType').val(utype);
+	}
+
+	function HandleWardSelection(categoryElementId, wardElementId) {
+		var categoryCode = document.getElementById(categoryElementId).value;
+		var wardCMB = document.getElementById(wardElementId);
+		var innerHTMLTxt = '<option selected value="00">Select Ward</option>';
+		var muncodeWardNum = @Json.Serialize(muncodeWardCount![User.GetProvinceMunicipality()]);
+		for (var i = 1; i <= muncodeWardNum; i++) {
+			var wardCode = (i < 10 ? "0" : "") + i.toString();
+			if (categoryCode == '1' || categoryCode == '2') {
+				innerHTMLTxt += "<option value=" + wardCode + ">Ward-" + i + "</option>";
+			}
+			else {
+				innerHTMLTxt += "<option disabled value=" + wardCode + ">Ward-" + i + "</option>";
+			}
+		}
+		wardCMB.innerHTML = innerHTMLTxt;
+	}
+
+	function PopulateDepartment(categoryElementId, departmentElementId) {
+		var categoryCode = document.getElementById(categoryElementId).value;
+		var departmentCMB = document.getElementById(departmentElementId);
+		departmentCMB.innerHTML = '<option selected value="00">Select Department</option>';
+		if (categoryCode == '2') {
+			departmentCMB.innerHTML += `<option value="01">Chairperson</option>
+														   <option value="02">Elected Member</option>
+														   <option value="03">Ward Secretary</option>
+														   <option value="04">Ward Staff</option>`;
+		} else if (categoryCode == '3') {
+			departmentCMB.innerHTML += `<option value="01">Mayor</option>
+														   <option value="02">Deputy Mayor</option>
+														   <option value="03">Administration Division</option>
+														   <option value="04">Urban Development</option>
+														   <option value="05">Infrastructure Division</option>
+														   <option value="06">Health Division</option>
+														   <option value="07">Social Development</option>
+														   <option value="08">Planning and Budgeting</option>
+														   <option value="09">IT Division</option>
+														   <option value="10">Education Division</option>
+														   <option value="11">Youth and Sports Division</option>
+														   <option value="12">Economic Development Division</option>
+														   <option value="13">Financial Administration Division</option>
+														   <option value="14">Internal Audit Division</option>`;
+		}
+	}
+
+	function OnCUWardChanged() {
+		var pm = @Json.Serialize(User.GetProvinceMunicipality());
+		var wardCode = $('#CUWardCmb').val();
+		var departmentCode = $('#CUDepartmentCmb').val();
+		var upmwd = pm + wardCode + departmentCode;
+		$('#cuPMWD').val(upmwd);
+	}
+
+	function OnCUDepartmentChanged() {
+		var pm = @Json.Serialize(User.GetProvinceMunicipality());
+		var wardCode = $('#CUWardCmb').val();
+		var departmentCode = $('#CUDepartmentCmb').val();
+		var upmwd = pm + wardCode + departmentCode;
+		$('#cuPMWD').val(upmwd);
+	}
+
+	function CloseAlert() {
+		$(".alert").alert('close');
+	}
+	$(".alert").delay(3000).slideUp(100, function () {
+		$(this).alert('close');
+	});
+</script>

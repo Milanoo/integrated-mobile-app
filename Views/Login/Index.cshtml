@@ -1,0 +1,56 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+@model string
+@{
+	ViewData["Title"] = "Sign In";
+}
+<div class="text-center mb-5">
+	<h4>Sign in Integrated Mobile App Admin Control System</h4>
+
+
+</div>
+
+<div class="row justify-content-around">
+	<!-- Login Form -->
+
+	<form asp-action="CheckLogin" class="col-sm-4" method="post">
+
+		<div class="mb-3">
+			<label for="email" class="form-label">Email Address / User Name</label>
+			@if (ViewData.ContainsKey("email"))
+			{
+				<input id="email" class="form-input form-control" name="email" value="@ViewData["email"]" placeholder="Email / User Name">
+			}
+			else
+			{
+				<input id="email" class="form-control" name="email" placeholder="Email / User Name">
+			}
+		</div>
+
+		<div class="mb-3">
+			<label for="password" class="form-label">Password</label>
+			<input type="password" id="pwd" class="form-control" name="pwd" placeholder="Password">
+		</div>
+
+		<input type="hidden" id="returnUrl" name="returnUrl" value="@Model" />
+
+		@if (ViewData.ContainsKey("Message") && ViewData["Message"]!.ToString() != "")
+		{
+			<h6 style="color:red">@ViewData["Message"]</h6>
+		}
+
+		<div class="d-flex justify-content-between align-items-center">
+			<input type="submit" class="btn btn-primary" value="Log In">
+		</div>
+	</form>
+</div>

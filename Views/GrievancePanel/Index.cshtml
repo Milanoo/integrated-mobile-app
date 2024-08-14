@@ -1,0 +1,415 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+
+@using IntegratedMobileApp.Extensions;
+@using IntegratedMobileApp.Models.Database;
+@{
+	ViewData["Title"] = "Grievance Panel";
+	var partialViewId = ViewData["PartialViewId"];
+}
+
+<style>
+	img.pointer {
+		cursor: pointer;
+	}
+
+	nav-item.pointer {
+		cursor: pointer;
+	}
+
+	nav-link.pointer {
+		cursor: pointer;
+	}
+</style>
+
+<div>
+	<ul class="nav nav-tabs">
+		<li class="nav-item">
+			<a class="nav-link" id="PostGrievanceLink" href="#" onclick="OnPostGrievanceClick()">Post Grievance</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" id="PendingGrievanceLink" href="#" onclick="OnPendingGrievanceClick()">Pending Grievance</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" id="RepliedGrievanceLink" href="#" onclick="OnRepliedGrievanceClick()">Replied Grievance</a>
+		</li>
+	</ul>
+	<div id="GrievanceSection">
+	</div>
+</div>
+
+<div class="modal fade" id="ForwardGrievModal" tabindex="-1" aria-labelledby="ForwardGrievModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<form id="ForwardGrievForm" asp-action="ForwardGrievance">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="ForwardGrievModalLabel">Forward Grievance</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<input hidden id="F_GrievanceId" name="Id" value="" />
+					<input hidden id="F_UserPMWD" name="PMWD" value="" />
+					<input hidden id="F_WardCode" name="WardCode" value="" />
+					@if (User.IsWardAdmin() || User.IsWard())
+					{
+						<div class="d-flex justify-content-between mb-3">
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="radioWard" id="radioWard" checked onchange="OnRadioWardChange()">
+								<label class="form-check-label" for="radioWard">
+									Ward
+								</label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="radioMuncipality" id="radioMuncipality" onchange="OnRadioMunChange()">
+								<label class="form-check-label" for="radioMuncipality">
+									Municipality
+								</label>
+							</div>
+						</div>
+					}
+					<select class="form-control w-100" id="cmbDepartment" name="DeptCode">
+						<option value="00" disabled selected>Select Department</option>
+						@if (User.IsMunicipalityAdmin() || User.IsMunicipality())
+						{
+							<option value="01">Mayor</option>
+							<option value="02">Deputy Mayor</option>
+							<option value="03">Administration Division</option>
+							<option value="04">Urban Development</option>
+							<option value="05">Infrastructure Division</option>
+							<option value="06">Health Division</option>
+							<option value="07">Social Development</option>
+							<option value="08">Planning and Budgeting</option>
+							<option value="09">IT Division</option>
+							<option value="10">Education Division</option>
+							<option value="11">Youth and Sports Division</option>
+							<option value="12">Economic Development Division</option>
+							<option value="13">Financial Administration Division</option>
+							<option value="14">Internal Audit Division</option>
+						}
+						else if (User.IsWardAdmin() || User.IsWard())
+						{
+							<option value="01">Chairperson</option>
+							<option value="02">Elected Member</option>
+							<option value="03">Ward Secretary</option>
+							<option value="04">Ward Staff</option>
+						}
+					</select>
+					@*<input hidden id="UserMail" name="uMail" value="" />*@
+					@*<input hidden type="text" id="UploadFileName" name="UploadFileName" value="" />*@
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+							<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+							<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+						</svg>
+						Close
+					</button>
+					<button type="submit" class="btn btn-primary">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-send-plus" viewBox="0 0 16 16">
+							<path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.75.75 0 0 0-.124 1.329l4.995 3.178 1.531 2.406a.5.5 0 0 0 .844-.536L6.637 10.07l7.494-7.494-1.895 4.738a.5.5 0 1 0 .928.372l2.8-7Zm-2.54 1.183L5.93 9.363 1.591 6.602l11.833-4.733Z" />
+							<path d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-3.5-2a.5.5 0 0 0-.5.5v1h-1a.5.5 0 0 0 0 1h1v1a.5.5 0 0 0 1 0v-1h1a.5.5 0 0 0 0-1h-1v-1a.5.5 0 0 0-.5-.5Z" />
+						</svg>
+						Forward
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="Reply2GrievModal" tabindex="-1" aria-labelledby="Reply2GrievModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<form id="Reply2GrievForm" asp-action="Reply2Griev">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="Reply2GrievModalLabel">Reply to Grievance</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<input hidden id="R_GrievanceId" name="Id" value="" />
+					<input hidden id="R_UserPMWD" name="uPMWD" value="" />
+					<input hidden id="R_UserMail" name="uMail" value="" />
+					<div class="input-group mb-3">
+						<textarea class="form-control w-100" id="ReplyTxt" name="ReplyTxt" style="height:150px" aria-label="Description"></textarea>
+					</div>
+					<input hidden type="text" id="UploadFileName" name="UploadFileName" value="" />
+					<div class="input-group mb-3">
+						<input type="text"
+							   class="form-control"
+							   id="UploadFile"
+							   placeholder="UploadFile"
+							   aria-label="UploadFile"
+							   aria-describedby="UploadFile">
+						<input type="file" id="BrowseFile" name="UploadFile" hidden onchange="OnAddFileButtonClick()" />
+						<label for="BrowseFile" class="btn btn-outline-secondary">Add File</label>
+					</div>
+					<div id="Upload_PgBar" class="progress mb-3" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+						<div id="Upload_PgBar_label" class="progress-bar" style="width: 0%">0%</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+							<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+							<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+						</svg>
+						Close
+					</button>
+					<button type="button" class="btn btn-primary" onclick="Reply2Griev()">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-reply" viewBox="0 0 16 16">
+							<path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.74 8.74 0 0 0-1.921-.306 7.404 7.404 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254a.503.503 0 0 0-.042-.028.147.147 0 0 1 0-.252.499.499 0 0 0 .042-.028l3.984-2.933zM7.8 10.386c.068 0 .143.003.223.006.434.02 1.034.086 1.7.271 1.326.368 2.896 1.202 3.94 3.08a.5.5 0 0 0 .933-.305c-.464-3.71-1.886-5.662-3.46-6.66-1.245-.79-2.527-.942-3.336-.971v-.66a1.144 1.144 0 0 0-1.767-.96l-3.994 2.94a1.147 1.147 0 0 0 0 1.946l3.994 2.94a1.144 1.144 0 0 0 1.767-.96v-.667z" />
+						</svg>
+						Reply
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="ViewImageModal" tabindex="-1" aria-labelledby="ViewImageModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" style="overflow-y:initial !important">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="ViewImageModalLabel">Image</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<img id="enlargeImage" src="" alt="No Image for this comment." class="img-fluid rounded" />
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+						<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+						<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+					</svg>
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	$(document).ready(function () {
+		var pvId = @Json.Serialize(partialViewId);
+		if (pvId == 1) {
+			OnPostGrievanceClick();
+		} else if (pvId == 2) {
+			OnPendingGrievanceClick();
+		} else if (pvId == 3) {
+			OnRepliedGrievanceClick();
+		}
+	});
+
+	function OnPostGrievanceClick() {
+		var postGrievanceLink = document.getElementById("PostGrievanceLink");
+		var pendingGrievanceLink = document.getElementById("PendingGrievanceLink");
+		var repliedGrievanceLink = document.getElementById("RepliedGrievanceLink");
+		postGrievanceLink.classList.add("active");
+		pendingGrievanceLink.classList.remove("active");
+		repliedGrievanceLink.classList.remove("active");
+
+		$.ajax({
+			type: "POST",
+			url: "GrievancePanel/PostGrievanceView",
+			success: function (data) {
+				$('#GrievanceSection').html(data);
+			}
+		});
+	}
+	function OnPendingGrievanceClick() {
+		var postGrievanceLink = document.getElementById("PostGrievanceLink");
+		var pendingGrievanceLink = document.getElementById("PendingGrievanceLink");
+		var repliedGrievanceLink = document.getElementById("RepliedGrievanceLink");
+		postGrievanceLink.classList.remove("active");
+		pendingGrievanceLink.classList.add("active");
+		repliedGrievanceLink.classList.remove("active");
+
+		$.ajax({
+			type: "POST",
+			url: "GrievancePanel/PendingGrievanceView",
+			success: function (data) {
+				$('#GrievanceSection').html(data);
+			}
+		});
+	}
+	function OnRepliedGrievanceClick() {
+		var postGrievanceLink = document.getElementById("PostGrievanceLink");
+		var pendingGrievanceLink = document.getElementById("PendingGrievanceLink");
+		var repliedGrievanceLink = document.getElementById("RepliedGrievanceLink");
+		postGrievanceLink.classList.remove("active");
+		pendingGrievanceLink.classList.remove("active");
+		repliedGrievanceLink.classList.add("active");
+
+		$.ajax({
+			type: "POST",
+			url: "GrievancePanel/RepliedGrievanceView",
+			success: function (data) {
+				$('#GrievanceSection').html(data);
+			}
+		});
+	}
+
+	function onForwardBtnClick(grievId, uPMWD) {
+		$('#F_GrievanceId').val(grievId);
+		$('#F_UserPMWD').val(uPMWD);
+		var wc = uPMWD.substring(3, 5);
+		$('#F_WardCode').val(wc);
+		$('#ForwardGrievModal').modal('show');
+	}
+
+	function OnRadioWardChange() {
+		var radioWard = document.getElementById("radioWard");
+		var radioMun = document.getElementById("radioMuncipality");
+		var cmbDept = document.getElementById("cmbDepartment");
+		var innerHtmlTxt = `<option value="00" disabled selected>Select Department</option>`;
+		if (radioWard.checked) {
+			var wc = $('#F_UserPMWD').val().substring(3, 5);
+			$('#F_WardCode').val(wc);
+			radioMun.checked = false;
+			innerHtmlTxt += `<option value="01">Chairperson</option>
+										<option value="02">Elected Member</option>
+										<option value="03">Ward Secretary</option>
+										<option value="04">Ward Staff</option>`;
+		}
+		else {
+			radioMun.checked = true;
+		}
+		cmbDept.innerHTML = innerHtmlTxt;
+	}
+
+	function OnRadioMunChange() {
+		var radioWard = document.getElementById("radioWard");
+		var radioMun = document.getElementById("radioMuncipality");
+		var cmbDept = document.getElementById("cmbDepartment");
+		var innerHtmlTxt = `<option value="00" disabled selected>Select Department</option>`;
+		if (radioMun.checked) {
+			$("#F_WardCode").val("00");
+			radioWard.checked = false;
+			innerHtmlTxt += `<option value="01">Mayor</option>
+										<option value="02">Deputy Mayor</option>
+										<option value="03">Administration Division</option>
+										<option value="04">Urban Development</option>
+										<option value="05">Infrastructure Division</option>
+										<option value="06">Health Division</option>
+										<option value="07">Social Development</option>
+										<option value="08">Planning and Budgeting</option>
+										<option value="09">IT Division</option>
+										<option value="10">Education Division</option>
+										<option value="11">Youth and Sports Division</option>
+										<option value="12">Economic Development Division</option>
+										<option value="13">Financial Administration Division</option>
+										<option value="14">Internal Audit Division</option>`;
+		}
+		else {
+			radioWard.checked = true;
+		}
+		cmbDept.innerHTML = innerHtmlTxt;
+	}
+
+	function onReplyBtnClick(grievId, uPMWD, mail) {
+		debugger;
+		$('#R_GrievanceId').val(grievId);
+		$('#R_UserPMWD').val(uPMWD);
+		$('#R_UserMail').val(mail);
+		$('#Reply2GrievModal').modal('show');
+	}
+
+	function OnAddFileButtonClick() {
+		$('#UploadFile').val($('#BrowseFile').val().split('\\').pop());
+	}
+
+	var uploadFile = null;
+	var fileInput = document.getElementById("BrowseFile");
+	fileInput.addEventListener("change", function (event) {
+		uploadFile = event.target.files[0]
+	});
+
+	function Reply2Griev() {
+		if (uploadFile != null) {
+			var upload = new tus.Upload(uploadFile, {
+				endpoint: '/Uploads',
+				retryDelays: [0, 3000, 5000, 10000, 20000],
+				metadata: {
+					task: "ReplyGrievance",
+					id: $('#R_GrievanceId').val(),
+					replyText: $('#ReplyTxt').val(),
+					userPMWD: $('#R_UserPMWD').val(),
+					userMail: $('#R_UserMail').val(),
+					filename: uploadFile.name
+				},
+				onError: function (error) {
+					console.log("Failed because: " + error)
+				},
+				onProgress: function (bytesUploaded, bytesTotal) {
+					var percentage = (bytesUploaded / bytesTotal * 100).toFixed(2)
+					$("#Upload_PgBar").attr("aria-valuenow", percentage);
+					$("#Upload_PgBar_label").css("width", percentage + "%");
+					$("#Upload_PgBar_label").html(percentage + "%");
+					console.log(bytesUploaded, bytesTotal, percentage + "%")
+				},
+				onSuccess: function () {
+					debugger;
+					$('#Reply2GrievForm').submit();
+					console.log("Download %s from %s", upload.file.name, upload.url)
+				}
+			})
+
+			if (uploadFile.size > 5 * 1024 * 1024) {
+				upload.options.chunkSize = 5 * 1024 * 1024;
+			}
+			else {
+				upload.options.chunkSize = uploadFile.size;
+			}
+
+			// Check if there are any previous uploads to continue.
+			upload.findPreviousUploads().then(function (previousUploads) {
+				// Found previous uploads so we select the first one.
+				if (previousUploads.length) {
+					upload.resumeFromPreviousUpload(previousUploads[0])
+				}
+				// Start the upload
+				upload.start()
+			})
+		}
+		else {
+			$('#Reply2GrievForm').submit();
+		}
+	}
+
+	function OnImageClick(elementId) {
+		var imgElement = document.getElementById(elementId);
+		var src = imgElement.getAttribute("src");
+
+		var engImgElement = document.getElementById("enlargeImage");
+		engImgElement.setAttribute("src", src);
+		$("#ViewImageModal").modal("show");
+
+	}
+
+	function OnStatusCheckChanged(grievId) {
+		$.ajax({
+			type: "POST",
+			url: "GrievancePanel/GrievanceStatusChange",
+			data: { 'grievId': grievId },
+			success: function () {
+				OnRepliedGrievanceClick();
+			}
+		});
+	}
+
+</script>

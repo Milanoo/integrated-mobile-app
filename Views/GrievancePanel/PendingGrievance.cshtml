@@ -1,0 +1,90 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+
+@using IntegratedMobileApp.Extensions;
+@using IntegratedMobileApp.Models.Database;
+@{
+	ViewData["Title"] = "Grievance Panel";
+	var grievs = ViewData["Grievs"] as List<TabUsergriv>;
+}
+
+<div class="p-2">
+	<table class="table table-bordered table-striped">
+		<thead class="table-success">
+			<tr class="text-center">
+				<th>SN</th>
+				<th>Grievance</th>
+				<th>Grievance To</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var griev in grievs!)
+			{
+				var sn = grievs.IndexOf(griev) + 1;
+				<tr>
+					<td>@sn</td>
+					<td>
+						<div class="d-flex justify-content-between">
+							<div>
+								<span>
+									@griev.Grivtext
+								</span>
+								<figcaption class="blockquote-footer" style="margin-top:1rem;margin-bottom:0rem">
+									@griev.GetGrievancePostedBy() (@griev.GetGrievanceSenderName()) : @griev.GetGrievancePostTime()
+								</figcaption>
+							</div>
+							<div>
+								@if (griev.Gpic != null && griev.Gpic != "" && griev.Gpic != "-")
+								{
+									<img class="pointer" id="imgGriev_@sn" width="75" height="75" src="/UploadDocs\\@griev.Gpic" onclick="OnImageClick('imgGriev_@sn')" />
+								}
+							</div>
+						</div>
+					</td>
+					<td>
+						@if (griev.Grivreceiver != null)
+						{
+							<span>
+								@griev.GetGrievanceReceiverDepartmentName()
+							</span>
+						}
+					</td>
+					<td>
+						@if ((User.IsAdmin() || (User.IsWard() && User.CanReplyFromWard()) || (User.IsMunicipality() && User.CanReplyFromMunicipality())))
+						{
+							<div class="d-flex justify-content-around">
+								<button class="btn btn-sm btn-outline-primary" onclick="onForwardBtnClick('@griev.Id','@User.GetLocality()')">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-send-plus" viewBox="0 0 16 16">
+										<path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.75.75 0 0 0-.124 1.329l4.995 3.178 1.531 2.406a.5.5 0 0 0 .844-.536L6.637 10.07l7.494-7.494-1.895 4.738a.5.5 0 1 0 .928.372l2.8-7Zm-2.54 1.183L5.93 9.363 1.591 6.602l11.833-4.733Z" />
+										<path d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-3.5-2a.5.5 0 0 0-.5.5v1h-1a.5.5 0 0 0 0 1h1v1a.5.5 0 0 0 1 0v-1h1a.5.5 0 0 0 0-1h-1v-1a.5.5 0 0 0-.5-.5Z" />
+									</svg>
+									Forward
+								</button>
+								@if (!User.IsGHO())
+								{
+									<button class="btn btn-sm btn-outline-success" onclick="onReplyBtnClick('@griev.Id','@User.GetLocality()','@User.GetEmail()')">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-reply" viewBox="0 0 16 16">
+											<path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.74 8.74 0 0 0-1.921-.306 7.404 7.404 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254a.503.503 0 0 0-.042-.028.147.147 0 0 1 0-.252.499.499 0 0 0 .042-.028l3.984-2.933zM7.8 10.386c.068 0 .143.003.223.006.434.02 1.034.086 1.7.271 1.326.368 2.896 1.202 3.94 3.08a.5.5 0 0 0 .933-.305c-.464-3.71-1.886-5.662-3.46-6.66-1.245-.79-2.527-.942-3.336-.971v-.66a1.144 1.144 0 0 0-1.767-.96l-3.994 2.94a1.147 1.147 0 0 0 0 1.946l3.994 2.94a1.144 1.144 0 0 0 1.767-.96v-.667z" />
+										</svg>
+										Reply
+									</button>
+								}
+							</div>
+						}
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

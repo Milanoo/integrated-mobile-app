@@ -1,0 +1,244 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+
+
+@using IntegratedMobileApp.Extensions;
+@using IntegratedMobileApp.Models.Database;
+@{
+	var user = ViewData["User"] as TabUser;
+	var muncodeWardCount = ViewData["MunCodeWardCount"] as Dictionary<string, int>;
+}
+
+<div>
+	<form asp-controller="AdminPanel" asp-action="EditUser">
+		<input hidden name="Id" id="euId" value="@user!.Id" />
+		<div class="row mb-3">
+			<label for="inputEUName" class="col-sm-2 col-form-label">Name</label>
+			<div class="col-sm-10">
+				<input class="form-control" name="Uname" id="inputEUName" value="@user!.Uname">
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label for="inputEUMail" class="col-sm-2 col-form-label">Mail / Username</label>
+			<div class="col-sm-10">
+				<input class="form-control" name="Umail" id="inputEUMail" value="@user!.Umail">
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label for="inputEUPhone" class="col-sm-2 col-form-label">Phone</label>
+			<div class="col-sm-10">
+				<input class="form-control" type="text" maxlength="15" name="Uphone" id="inputEUPhone" value="@user!.Uphone">
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label for="inputEUPassword" class="col-sm-2 col-form-label">Password</label>
+			<div class="col-sm-10">
+				<input type="password" class="form-control" name="Password" id="inputEUPassword" value="">
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label for="EUCategoryCmb" class="col-sm-2 col-form-label">Category</label>
+			<div class="col-sm-10">
+				<select id="EUCategoryCmb" class="form-select" onchange="OnEUCategoryChanged()">
+					<option disabled selected>Select Category</option>
+					@if (User.IsPublic())
+					{
+
+					}
+					else if (User.IsWard())
+					{
+						<option value="1">Public</option>
+					}
+					else if (User.IsMunicipality())
+					{
+						<option value="1">Public</option>
+						<option value="2">Ward</option>
+					}
+					else
+					{
+						<option value="1">Public</option>
+						<option value="2">Ward</option>
+						<option value="3">Municipality</option>
+						<option value="4">Admin</option>
+					}
+				</select>
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label for="EUWardCmb" class="col-sm-2 col-form-label">Ward</label>
+			<div class="col-sm-10">
+				<select id="EUWardCmb" class="form-select" onchange="OnEUWardChanged()">
+					<option disabled selected value="00">Select Ward</option>
+					@for (int i = 1; i <= muncodeWardCount![User.GetProvinceMunicipality()]; i++)
+					{
+						var val = $"{i:00}";
+						<option value="@val">Ward-@i</option>
+					}
+				</select>
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label for="EUDepartmentCmb" class="col-sm-2 col-form-label">Department</label>
+			<div class="col-sm-10">
+				<select id="EUDepartmentCmb" class="form-select" onchange="OnEUDepartmentChanged()">
+					<option disabled selected value="00">Select Department</option>
+				</select>
+			</div>
+		</div>
+		<div class="row mb-3">
+			<label class="col-sm-2 col-form-label">Access</label>
+			<div class="col-sm-10">
+				<div class="d-flex gap-2">
+					<span>Activate or Deactivate the user</span>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="EUActiveDeactiveSwitch">
+					</div>
+				</div>
+				<div class="d-flex gap-2">
+					<span>Reply to greviance : Ward Level</span>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="EUWardLevelReplySwitch">
+					</div>
+				</div>
+				<div class="d-flex gap-2">
+					<span>Reply to greviance : Municipality Level</span>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="EUMunLevelReplySwitch">
+					</div>
+				</div>
+				<div class="d-flex gap-2">
+					<span>Post Information : Ward Level</span>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="EUWardLevelPostSwitch">
+					</div>
+				</div>
+				<div class="d-flex gap-2">
+					<span>Post Information : Municipality Level</span>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="EUMunLevelPostSwitch">
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="d-flex justify-content-end mb-3">
+			<button class="btn btn-outline-primary">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+					<path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+				</svg>
+				Edit
+			</button>
+		</div>
+		<input hidden name="Upmw" id="euPMWD" value="" />
+		<input hidden name="Utype" id="euType" value="" />
+	</form>
+</div>
+
+<script>
+	$(document).ready(function () {
+		var categoryCode = @Json.Serialize(user.Utype!.Substring(0,1));
+		var wardCode = @Json.Serialize(user.Upmw!.Substring(3,2));
+		var departmentCode = @Json.Serialize(user.GetDepartment());
+		$('#EUCategoryCmb').val(categoryCode).change();
+		$('#EUWardCmb').val(wardCode).change();
+		$('#EUDepartmentCmb').val(departmentCode).change();
+	});
+
+	function OnEUCategoryChanged() {
+		var categeoryId = $('#EUCategoryCmb').val();
+		if (categeoryId == '1') {
+			$('#EUActiveDeactiveSwitch').attr('checked', true);
+			$('#EUWardLevelReplySwitch').attr('checked', false);
+			$('#EUMunLevelReplySwitch').attr('checked', false);
+			$('#EUWardLevelPostSwitch').attr('checked', false);
+			$('#EUMunLevelPostSwitch').attr('checked', false);
+			$("#EUActiveDeactiveSwitch").show();
+			$("#EUWardLevelReplySwitch").hide();
+			$("#EUMunLevelReplySwitch").hide();
+			$("#EUWardLevelPostSwitch").hide();
+			$("#EUMunLevelPostSwitch").hide();
+		}
+		else if (categeoryId == '2') {
+			$('#EUActiveDeactiveSwitch').attr('checked', true);
+			$('#EUWardLevelReplySwitch').attr('checked', true);
+			$('#EUMunLevelReplySwitch').attr('checked', false);
+			$('#EUWardLevelPostSwitch').attr('checked', true);
+			$('#EUMunLevelPostSwitch').attr('checked', false);
+			$("#EUActiveDeactiveSwitch").show();
+			$("#EUWardLevelReplySwitch").show();
+			$("#EUMunLevelReplySwitch").hide();
+			$("#EUWardLevelPostSwitch").show();
+			$("#EUMunLevelPostSwitch").hide();
+		}
+		else if (categeoryId == '3') {
+			$('#EUActiveDeactiveSwitch').attr('checked', true);
+			$('#EUWardLevelReplySwitch').attr('checked', false);
+			$('#EUMunLevelReplySwitch').attr('checked', true);
+			$('#EUWardLevelPostSwitch').attr('checked', false);
+			$('#EUMunLevelPostSwitch').attr('checked', true);
+			$("#EUActiveDeactiveSwitch").show();
+			$("#EUWardLevelReplySwitch").hide();
+			$("#EUMunLevelReplySwitch").show();
+			$("#EUWardLevelPostSwitch").hide();
+			$("#EUMunLevelPostSwitch").show();
+		}
+		else if (categeoryId == '4') {
+			$('#EUActiveDeactiveSwitch').attr('checked', true);
+			$('#EUWardLevelReplySwitch').attr('checked', true);
+			$('#EUMunLevelReplySwitch').attr('checked', true);
+			$('#EUWardLevelPostSwitch').attr('checked', true);
+			$('#EUMunLevelPostSwitch').attr('checked', true);
+			$("#EUActiveDeactiveSwitch").show();
+			$("#EUWardLevelReplySwitch").show();
+			$("#EUMunLevelReplySwitch").show();
+			$("#EUWardLevelPostSwitch").show();
+			$("#EUMunLevelPostSwitch").show();
+		}
+		HandleWardSelection("EUCategoryCmb", "EUWardCmb");
+		PopulateDepartment("EUCategoryCmb", "EUDepartmentCmb");
+		var a = $('#EUActiveDeactiveSwitch').is(":checked") ? '1' : '0';
+		var b = $('#EUWardLevelReplySwitch').is(":checked") ? '1' : '0';
+		var c = $('#EUMunLevelReplySwitch').is(":checked") ? '1' : '0';
+		var d = $('#EUWardLevelPostSwitch').is(":checked") ? '1' : '0';
+		var e = $('#EUMunLevelPostSwitch').is(":checked") ? '1' : '0';
+		var utype = categeoryId + a + b + c + d + e;
+		$('#euType').val(utype);
+	}
+
+	function OnEUWardChanged() {
+		var pm = @Json.Serialize(User.GetProvinceMunicipality());
+		var wardCode = $('#EUWardCmb').val();
+		if (wardCode == null) {
+			wardCode = "00";
+		}
+		var departmentCode = $('#EUDepartmentCmb').val();
+		if (departmentCode == null) {
+			departmentCode = "00";
+		}
+		var upmwd = pm + wardCode + departmentCode;
+		$('#euPMWD').val(upmwd);
+	}
+
+	function OnEUDepartmentChanged() {
+		var pm = @Json.Serialize(User.GetProvinceMunicipality());
+		var wardCode = $('#EUWardCmb').val();
+		if (wardCode == null) {
+			wardCode = "00";
+		}
+		var departmentCode = $('#EUDepartmentCmb').val();
+		if (departmentCode == null) {
+			departmentCode = "00";
+		}
+		var upmwd = pm + wardCode + departmentCode;
+		$('#euPMWD').val(upmwd);
+	}
+</script>

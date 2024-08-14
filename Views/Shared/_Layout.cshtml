@@ -1,0 +1,112 @@
+﻿@*
+//--------------------------------------------------------------------
+//   Date                 : November, 2023
+//    Copyright: (C)2023 by AHT-GROUP, GmbH/SOFTWEL (P) Ltd
+//    Email                : support at softwel dot com dot np
+// --------------------------------------------------------------------
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License (GPL) as published by
+// the Free Software Foundation (https://www.fsf.org/); either version 2
+// of the License, or (at your option) any later version.
+*@
+@using IntegratedMobileApp.Extensions;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - IMA</title>
+	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/IntegratedMobileApp.styles.css" asp-append-version="true" />
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+	<script src="~/js/tus.min.js"></script>
+	@* <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>*@
+</head>
+<style>
+	.container {
+		max-width: unset;
+		width: 100%;
+		padding-left: 3rem;
+		padding-right: 3rem;
+		margin: 0 auto;
+	}
+</style>
+<body>
+	<header>
+		<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+			<div class="container-fluid">
+				<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Integrated Mobile App</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+						aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+					<ul class="navbar-nav flex-grow-1">
+						<li class="nav-item">
+							<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+						</li>
+						@if (!User.IsPublic())
+						{
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="AdminPanel" asp-action="Index">Admin Panel</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="GrievancePanel" asp-action="Index">Grievance Panel</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="ServiceAdditional" asp-action="Index">Additional Service Panel</a>
+							</li>
+						}
+					</ul>
+					<ul class="navbar-nav">
+						@if (User.Identity?.IsAuthenticated ?? false)
+						{
+							<li class="nav-item dropdown">
+								<a class="nav-link text-dark dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+									@User.GetEmail()
+									<span class="caret"></span>
+								</a>
+								<ul class="dropdown-menu dropdown-menu-end">
+									<li>
+										<a class="dropdown-item" asp-area="" asp-controller="Login" asp-action="Logout">Log Out</a>
+									</li>
+								</ul>
+							</li>
+						}
+						else
+						{
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="Login" asp-action="Index">Login</a>
+							</li>
+						}
+					</ul>
+				</div>
+			</div>
+		</nav>
+	</header>
+
+	<div class="container">
+		<main role="main" class="pb-3">
+			@RenderBody()
+		</main>
+	</div>
+
+	<footer class="border-top footer text-muted d-flex justify-content-around">
+		<div class="container">
+			&copy; 2023 - IntegratedMobileApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+		</div>
+		<div class="container position-relative">
+			<div class="position-absolute bottom-0 end-0" style="margin-right:10px">
+				<span style="margin-right:1rem;">Developed By <a href="http://softwel.com.np/" target="_blank">Softwel (P) Ltd.</a> </span>				
+			</div>
+		</div>
+	</footer>
+
+	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="~/js/site.js" asp-append-version="true"></script>
+	@await RenderSectionAsync("Scripts", required: false)	
+</body>
+</html>
